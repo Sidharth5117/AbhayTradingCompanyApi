@@ -17,7 +17,7 @@ namespace AbhayTradingCompanyApi.Controllers
         // GET: api/<OrdersController>
         [HttpGet]
         [Route("orders")]
-        public async Task<IList<Order>> Get()
+        public async Task<IList<Order>> GetOrders()
         {
             IList<Order> items = new List<Order>();
             string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
@@ -79,6 +79,31 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
+        [HttpGet]
+        [Route("materials")]
+        public async Task<IList<Material>> GetMaterials()
+        {
+            IList<Material> items = new List<Material>();
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+            FirestoreDb db = FirestoreDb.Create("abhaytradingcompany-2fe1f");
+            Query d = db.Collection("materials");
+            QuerySnapshot s = await d.GetSnapshotAsync();
+            foreach (DocumentSnapshot docsnap in s.Documents)
+            {
+                Material b = docsnap.ConvertTo<Material>();
+                b.id = docsnap.Id;
+                items.Add(b);
+            }
+            return items;
+        }
+
+
+
+
+
+
+
 
         [HttpGet]
         [Route("brokers")]
@@ -102,7 +127,7 @@ namespace AbhayTradingCompanyApi.Controllers
 
         [HttpGet]
         [Route("shipto")]
-        public async Task<IList<Shipto>> GetShipTo()
+        public async Task<IList<Shipto>> GetShipto()
         {
             IList<Shipto> items = new List<Shipto>();
             string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
@@ -128,7 +153,7 @@ namespace AbhayTradingCompanyApi.Controllers
         // GET api/<OrdersController>/5
         [HttpGet]
         [Route("orders/{id}")]
-        public async Task<ActionResult<Order>> Get(string id)
+        public async Task<ActionResult<Order>> GetOrder(string id)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
@@ -174,9 +199,9 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
+            /*
 
-
-            Query cr2 = db.Collection("brokers").WhereEqualTo("broker", master.broker);
+            Query cr2 = db.Collection("brokers").WhereEqualTo("broker", master.broker.ToUpper());
             QuerySnapshot q2 = await cr2.GetSnapshotAsync();
             int x2 = 0;
 
@@ -198,7 +223,7 @@ namespace AbhayTradingCompanyApi.Controllers
 
                 Dictionary<string, object> d2 = new Dictionary<string, object>()
             {
-                {"broker",master.broker.ToLower() }
+                {"broker",master.broker.ToUpper() }
 
 
             };
@@ -209,7 +234,7 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
-                n.nextcustomerid++;
+                n.nextbrokerid++;
             }
 
             else
@@ -223,11 +248,11 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
+            */
 
+            /*
 
-
-
-            Query cr3 = db.Collection("shipto").WhereEqualTo("shipto", master.shipto);
+            Query cr3 = db.Collection("shipto").WhereEqualTo("shipto", master.shipto.ToUpper());
             QuerySnapshot q3 = await cr3.GetSnapshotAsync();
             int x3 = 0;
 
@@ -249,7 +274,7 @@ namespace AbhayTradingCompanyApi.Controllers
 
                 Dictionary<string, object> d3 = new Dictionary<string, object>()
             {
-                {"shipto",master.shipto.ToLower() }
+                {"shipto",master.shipto.ToUpper() }
 
 
             };
@@ -274,14 +299,14 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
+            */
 
 
 
 
 
 
-
-            Query cr = db.Collection("customers").WhereEqualTo("customer",master.customer);
+            Query cr = db.Collection("customers").WhereEqualTo("customer",master.customer.ToUpper());
             QuerySnapshot q = await cr.GetSnapshotAsync();
             int x = 0;
             foreach (DocumentSnapshot docsnap in q.Documents)
@@ -302,7 +327,7 @@ namespace AbhayTradingCompanyApi.Controllers
 
                 Dictionary<string, object> d4 = new Dictionary<string, object>()
             {
-                {"customer",master.customer.ToLower() }
+                {"customer",master.customer.ToUpper() }
               
 
             };
@@ -330,15 +355,15 @@ namespace AbhayTradingCompanyApi.Controllers
             {
                 {"timestamp",Timestamp.GetCurrentTimestamp() },
                 { "billrate",master.billrate },
-                {"broker",master.broker.ToLower() },
-                {"customer",master.customer.ToLower() },
-                {"entryby",master.entryby.ToLower() },
-                { "material",master.material.ToLower()},
-                {"millname",master.millname.ToLower() },
+                {"broker",master.broker.ToUpper() },
+                {"customer",master.customer.ToUpper() },
+                {"entryby",master.entryby.ToUpper() },
+                { "material",master.material.ToUpper()},
+                {"millname",master.millname.ToUpper() },
                 {"quantity",master.quantity },
-                {"remarks",master.remarks.ToLower() },
+                {"remarks",master.remarks.ToUpper() },
                 {"saudarate",master.saudarate },
-                {"shipto",master.shipto.ToLower() }
+                {"shipto",master.shipto.ToUpper() }
 
             };
             c.SetAsync(d);
@@ -350,10 +375,10 @@ namespace AbhayTradingCompanyApi.Controllers
             Dictionary<string, object> updates = new Dictionary<string, object>
 {
 
-   {"nextorderid",n.nextorderid+1},
-                {"nextcustomerid",n.nextcustomerid },
-                 {"nextbrokerid",n.nextbrokerid },
-                 {"nextshiptoid",n.nextshiptoid }
+                    {"nextorderid",n.nextorderid+1},
+                   {"nextcustomerid",n.nextcustomerid }
+                   
+                      
 
 };
 
@@ -375,16 +400,16 @@ namespace AbhayTradingCompanyApi.Controllers
             DocumentReference cityRef = db.Collection("orders").Document(id);
             Dictionary<string, object> updates = new Dictionary<string, object>
 {
- {              "billrate",master.billrate },
-                {"broker",master.broker.ToLower() },
-                {"customer",master.customer.ToLower() },
-                {"entryby",master.entryby.ToLower() },
-                { "material",master.material.ToLower()},
-                {"millname",master.millname.ToLower() },
+                {"billrate",master.billrate },
+                {"broker",master.broker.ToUpper() },
+                {"customer",master.customer.ToUpper() },
+                {"entryby",master.entryby.ToUpper() },
+                { "material",master.material.ToUpper()},
+                {"millname",master.millname.ToUpper() },
                 {"quantity",master.quantity },
-                {"remarks",master.remarks.ToLower() },
+                {"remarks",master.remarks.ToUpper() },
                 {"saudarate",master.saudarate },
-                {"shipto",master.shipto.ToLower() }
+                {"shipto",master.shipto.ToUpper() }
 };
             await cityRef.UpdateAsync(updates);
 

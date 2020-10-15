@@ -16,11 +16,7 @@ namespace AbhayTradingCompanyApi.Models
         public int nextcustomerid { get; set; }
 
 
-        [Google.Cloud.Firestore.FirestoreProperty]
-        public int nextbrokerid { get; set; }
-
-        [Google.Cloud.Firestore.FirestoreProperty]
-        public int nextshiptoid { get; set; }
+       
 
 
 
