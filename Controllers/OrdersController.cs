@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AbhayTradingCompanyApi.Models;
+using Google.Apis.Util;
 using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Mvc;
 
@@ -190,7 +191,7 @@ namespace AbhayTradingCompanyApi.Controllers
             DocumentSnapshot s1 = await d1.GetSnapshotAsync();
 
             Nextid n = s1.ConvertTo<Nextid>();
-           
+
 
 
 
@@ -306,12 +307,12 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
 
-            Query cr = db.Collection("customers").WhereEqualTo("customer",master.customer.ToUpper());
+            Query cr = db.Collection("customers").WhereEqualTo("customer", master.customer.ToUpper());
             QuerySnapshot q = await cr.GetSnapshotAsync();
             int x = 0;
             foreach (DocumentSnapshot docsnap in q.Documents)
             {
-                if(docsnap.Exists)
+                if (docsnap.Exists)
                 {
                     x = 1;
                 }
@@ -319,16 +320,16 @@ namespace AbhayTradingCompanyApi.Controllers
                 {
 
                 }
-                
+
             }
 
-            if(x==0)
+            if (x == 0)
             {
 
                 Dictionary<string, object> d4 = new Dictionary<string, object>()
             {
                 {"customer",master.customer.ToUpper() }
-              
+
 
             };
                 DocumentReference c4 = db.Collection("customers").Document(n.nextcustomerid.ToString());
@@ -377,20 +378,221 @@ namespace AbhayTradingCompanyApi.Controllers
 
                     {"nextorderid",n.nextorderid+1},
                    {"nextcustomerid",n.nextcustomerid }
-                   
-                      
+
+
 
 };
 
             await cityRef.UpdateAsync(updates);
 
 
-            return master;
+            DocumentReference d5 = db.Collection("orders").Document((n.nextorderid).ToString());
+            DocumentSnapshot s5 = await d5.GetSnapshotAsync();
+
+
+            if (s5.Exists)
+            {
+                Order b = s5.ConvertTo<Order>();
+                b.id = s5.Id;
+                return b;
+            }
+            else
+            {
+                return NotFound();
+            }
 
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        [HttpGet]
+        [Route("orders/add")]
+        public async Task<ActionResult<Order>> PostFromUrl([FromQuery] Order master)
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+            FirestoreDb db = FirestoreDb.Create("abhaytradingcompany-2fe1f");
+
+
+            DocumentReference d1 = db.Collection("nextid").Document("1");
+            DocumentSnapshot s1 = await d1.GetSnapshotAsync();
+
+            Nextid n = s1.ConvertTo<Nextid>();
+
+
+
+
+            DocumentReference c = db.Collection("orders").Document(n.nextorderid.ToString());
+
+
+
+
+
+
+          
+
+           
+
+            if (master.broker == null)
+            {
+                master.broker = null;
+            }
+            else
+            {
+                master.broker = master.broker.ToUpper();
+            }
+
+
+            if (master.shipto == null)
+            {
+                master.shipto = null;
+            }
+            else
+            {
+                master.shipto = master.shipto.ToUpper();
+            }
+
+
+
+            if (master.remarks == null)
+            {
+                master.remarks = null;
+            }
+            else
+            {
+                master.remarks = master.remarks.ToUpper();
+            }
+
+
+
+
+            if (master.material == null || master.customer == null || master.millname == null || master.quantity<1 || master.saudarate<1 || master.billrate<1 || master.entryby == null)
+            {
+                return StatusCode(400);
+            }
+            else
+            {
+
+
+               
+
+
+                Query cr = db.Collection("customers").WhereEqualTo("customer", master.customer.ToUpper());
+                QuerySnapshot q = await cr.GetSnapshotAsync();
+                int x = 0;
+                foreach (DocumentSnapshot docsnap in q.Documents)
+                {
+                    if (docsnap.Exists)
+                    {
+                        x = 1;
+                    }
+                    else
+                    {
+
+                    }
+
+                }
+
+                if (x == 0)
+                {
+
+                    Dictionary<string, object> d4 = new Dictionary<string, object>()
+            {
+                {"customer",master.customer.ToUpper() }
+
+
+            };
+                    DocumentReference c4 = db.Collection("customers").Document(n.nextcustomerid.ToString());
+                    c4.SetAsync(d4);
+
+
+
+
+
+                    n.nextcustomerid++;
+                }
+
+
+                Dictionary<string, object> d = new Dictionary<string, object>()
+            {
+                {"timestamp",Timestamp.GetCurrentTimestamp() },
+
+                { "billrate",master.billrate },
+                {"broker",master.broker },
+                {"customer",master.customer.ToUpper() },
+                {"entryby",master.entryby.ToUpper() },
+                { "material",master.material.ToUpper()},
+                {"millname",master.millname.ToUpper() },
+                {"quantity",master.quantity },
+                {"remarks",master.remarks },
+                {"saudarate",master.saudarate },
+                {"shipto",master.shipto }
+
+            };
+                c.SetAsync(d);
+
+
+                DocumentReference cityRef = db.Collection("nextid").Document("1");
+
+
+                Dictionary<string, object> updates = new Dictionary<string, object>
+{
+
+                    {"nextorderid",n.nextorderid+1},
+                   {"nextcustomerid",n.nextcustomerid }
+
+
+
+};
+
+                await cityRef.UpdateAsync(updates);
+
+
+                DocumentReference d5 = db.Collection("orders").Document((n.nextorderid).ToString());
+                DocumentSnapshot s5 = await d5.GetSnapshotAsync();
+
+
+                if (s5.Exists)
+                {
+                    Order b = s5.ConvertTo<Order>();
+                    b.id = s5.Id;
+                    return b;
+                }
+                else
+                {
+                    return NotFound();
+                }
+
+
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+
         // PUT api/<OrdersController>/5
-        [HttpPut("{id}")]
+        [HttpPut("orders/{id}")]
         public async Task<ActionResult<Order>> PutMaster(string id, Order master)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
@@ -437,5 +639,45 @@ namespace AbhayTradingCompanyApi.Controllers
 
 
         }
+
+
+
+
+
+
+
+        [HttpGet]
+        [Route("orders/delete")]
+        public async Task<ActionResult<Order>> DeleteFromUrl([FromQuery] string id)
+        {
+
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"atcauth.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+            FirestoreDb db = FirestoreDb.Create("abhaytradingcompany-2fe1f");
+            DocumentReference d = db.Collection("orders").Document(id);
+
+            DocumentSnapshot s = await d.GetSnapshotAsync();
+
+            if (s.Exists)
+            {
+                Order b = s.ConvertTo<Order>();
+
+
+                b.id = s.Id;
+
+                await d.DeleteAsync();
+
+                return b;
+
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+
+
+
     }
 }
